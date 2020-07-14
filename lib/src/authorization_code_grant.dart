@@ -257,7 +257,7 @@ class AuthorizationCodeGrant {
           '"code".');
     }
 
-    return await _handleAuthorizationCode(parameters['code']);
+    return await _handleAuthorizationCode(parameters['code'], false);
   }
 
   /// Processes an authorization code directly.
