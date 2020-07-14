@@ -257,7 +257,7 @@ class AuthorizationCodeGrant {
           '"code".');
     }
 
-    return await _handleAuthorizationCode(null, parameters['code']);
+    return await _handleAuthorizationCode(parameters['code']);
   }
 
   /// Processes an authorization code directly.
@@ -275,7 +275,7 @@ class AuthorizationCodeGrant {
   /// responses while retrieving credentials.
   ///
   /// Throws [AuthorizationException] if the authorization fails.
-  Future<Client> handleAuthorizationCode(String grantType, String authorizationCode) async {
+  Future<Client> handleAuthorizationCode(String authorizationCode, {bool extra = false}) async {
     if (_state == _State.initial) {
       throw StateError('The authorization URL has not yet been generated.');
     } else if (_state == _State.finished) {
@@ -283,18 +283,24 @@ class AuthorizationCodeGrant {
     }
     _state = _State.finished;
 
-    return await _handleAuthorizationCode(grantType, authorizationCode);
+    return await _handleAuthorizationCode(authorizationCode, extra);
   }
 
   /// This works just like [handleAuthorizationCode], except it doesn't validate
   /// the state beforehand.
-  Future<Client> _handleAuthorizationCode(String grantType, String authorizationCode) async {
+  Future<Client> _handleAuthorizationCode(String authorizationCode, bool extra) async {
     var startTime = DateTime.now();
 
     var headers = <String, String>{};
 
-    var body = {
-      'grant_type': grantType ?? 'authorization_code',
+    var body = extra ? {
+      'grant_type': 'urn:ietf:params:oauth:grant-type:uma-ticket',
+      'audience': 'authz-management',
+      'code': authorizationCode,
+      'redirect_uri': _redirectEndpoint.toString(),
+      'code_verifier': _codeVerifier
+    } : {
+      'grant_type': 'authorization_code',
       'code': authorizationCode,
       'redirect_uri': _redirectEndpoint.toString(),
       'code_verifier': _codeVerifier
